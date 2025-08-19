@@ -1,48 +1,1061 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Web Lego Mario</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LEGO Mario Sensor Monitor</title>
     <style>
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
         body {
-            font-family: sans-serif;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.4;
+            -webkit-tap-highlight-color: transparent;
         }
-        #log {
-            grid-column: 1 / -1;
-            height: 200px;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 0.5em;
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            text-align: center;
+            color: #e51d24;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .status-connected {
+            background-color: #4CAF50;
+        }
+
+        .status-disconnected {
+            background-color: #f44336;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background-color: #e51d24;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.2s;
+        }
+
+        .btn:active {
+            background-color: #c51920;
+            transform: scale(0.98);
+        }
+
+        .btn-disabled {
+            background-color: #cccccc;
+            color: #666666;
+        }
+
+        .sensor-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .sensor-title {
+            font-weight: bold;
+            color: #e51d24;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sensor-data {
+            padding: 8px 0;
+            font-family: monospace;
+            word-break: break-all;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 1.05rem;
+        }
+
+        .pants-visualization {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 8px;
+        }
+
+        .bit-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .bit-label {
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .bit-0 {
+            background-color: #ccc;
+        }
+
+        .bit-1 {
+            background-color: #4CAF50;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .set-link {
+            display: block;
+            background-color: #2196F3;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .set-link:active {
+            background-color: #0b7dda;
+        }
+
+        .log-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-title {
+            font-weight: bold;
+            color: #e51d24;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .log-entry {
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            color: #555;
             white-space: pre-wrap;
+            word-break: break-all;
+            padding: 3px 0;
         }
+
+        .instructions {
+            background-color: #e8f4fc;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin: 15px 0;
+            font-size: 0.95rem;
+        }
+
+        .instructions-title {
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+
+        .instructions-list {
+            padding-left: 20px;
+        }
+
+        .instructions-list li {
+            margin-bottom: 5px;
+        }
+
+        .sensor-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #e51d24;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            color: #888;
+            font-style: italic;
+        }
+
+        .highlight {
+            background-color: #fff9c4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .sensor-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 8px;
+        }
+
+        .port0-icon { background-color: #FF9800; color: white; }
+        .port1-icon { background-color: #2196F3; color: white; }
+        .port2-icon { background-color: #4CAF50; color: white; }
+        .port3-icon { background-color: #9C27B0; color: white; }
+        .port6-icon { background-color: #FF5722; color: white; }
     </style>
 </head>
 <body>
-    <div>
-        <button id="connectButton">Connect to Lego Mario</button>
-        <button id="disconnectButton" disabled>Disconnect</button>
-        <button id="turnOffButton" disabled>Turn Off</button>
-    </div>
-    <div>
-        <h2>Device Info</h2>
-        <p><strong>Status:</strong> <span id="status">Disconnected</span></p>
-    </div>
-    <div>
-        <h2>Pants</h2>
-        <p id="pants">None</p>
-    </div>
-    <div>
-        <h2>Tile</h2>
-        <p id="tile">None</p>
-    </div>
-    <div>
-        <h2>Accelerometer</h2>
-        <p>X: <span id="accX">0</span>, Y: <span id="accY">0</span>, Z: <span id="accZ">0</span></p>
-    </div>
-    <div id="log"></div>
+    <h1>LEGO Mario Sensor Monitor</h1>
 
-    <script src="script.js"></script>
+    <div id="status" class="status-bar status-disconnected">Not connected</div>
+
+    <button id="connectButton" class="btn">Connect to LEGO Mario</button>
+
+    <div class="instructions">
+        <div class="instructions-title">How to Use:</div>
+        <ul class="instructions-list">
+            <li>1. Click "Connect to LEGO Mario"</li>
+            <li>2. Select your LEGO Mario device</li>
+            <li>3. <span class="highlight">Change pants piece</span> to see pants sensor data</li>
+            <li>4. <span class="highlight">Show barcode</span> for color sensor data</li>
+            <li>5. <span class="highlight">Move/shake Mario</span> for accelerometer data</li>
+        </ul>
+    </div>
+
+    <div class="sensor-card">
+        <div class="sensor-title"><span class="sensor-icon port0-icon">0</span>Port 0 - Accelerometer/Gesture</div>
+        <div class="info-row">
+            <span class="info-label">RAW Mode (0):</span>
+            <div id="port0-raw" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">GEST Mode (1):</span>
+            <div id="port0-gest" class="sensor-data">Waiting for data...</div>
+        </div>
+    </div>
+
+    <div class="sensor-card">
+        <div class="sensor-title"><span class="sensor-icon port1-icon">1</span>Port 1 - Color/Barcode Sensor</div>
+        <div class="info-row">
+            <span class="info-label">TAG Mode (0):</span>
+            <div id="port1-tag" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">RGB Mode (1):</span>
+            <div id="port1-rgb" class="sensor-data">Waiting for data...</div>
+        </div>
+    </div>
+
+    <div class="sensor-card">
+        <div class="sensor-title"><span class="sensor-icon port2-icon">2</span>Port 2 - Pants Sensor (IO Type 0x4a)</div>
+        <div class="info-row">
+            <span class="info-label">PANT Mode (0):</span>
+            <div id="port2-pant" class="sensor-data">Waiting for data...</div>
+        </div>
+
+        <div class="pants-visualization" id="pants-visualization">
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">5</div>
+            </div>
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">4</div>
+            </div>
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">3</div>
+            </div>
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">2</div>
+            </div>
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">1</div>
+            </div>
+            <div>
+                <div class="bit-circle bit-0">0</div>
+                <div class="bit-label">0</div>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Name:</span>
+            <span id="pants-name" class="no-data">?</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">LEGO Set:</span>
+            <span id="pants-set" class="no-data">?</span>
+        </div>
+        <a href="#" id="set-link" class="set-link" style="display: none;">View LEGO Set</a>
+    </div>
+
+    <div class="sensor-card">
+        <div class="sensor-title"><span class="sensor-icon port3-icon">3</span>Port 3 - Events/Debug</div>
+        <div class="info-row">
+            <span class="info-label">CHAL Mode (0):</span>
+            <div id="port3-chal" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">VERS Mode (1):</span>
+            <div id="port3-vers" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">EVENTS Mode (2):</span>
+            <div id="port3-events" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">DEBUG Mode (3):</span>
+            <div id="port3-debug" class="sensor-data">Waiting for data...</div>
+        </div>
+    </div>
+
+    <div class="sensor-card">
+        <div class="sensor-title"><span class="sensor-icon port6-icon">6</span>Port 6 - Voltage</div>
+        <div class="info-row">
+            <span class="info-label">VLT L Mode (0):</span>
+            <div id="port6-vltl" class="sensor-data">Waiting for data...</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">VLT S Mode (1):</span>
+            <div id="port6-vlts" class="sensor-data">Waiting for data...</div>
+        </div>
+    </div>
+
+    <div class="log-container">
+        <div class="log-title">Raw Data Log</div>
+        <div id="rawDataLog"></div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const LEGO_SERVICE_UUID = '00001623-1212-efde-1623-785feabcd123';
+        const LEGO_CHARACTERISTIC_UUID = '00001624-1212-efde-1623-785feabcd123';
+        const REQUEST_PROCESSING_DELAY = 250; // ms between requests
+
+        // --- Global Variables ---
+        let device = null;
+        let server = null;
+        let service = null;
+        let characteristic = null;
+        let isConnected = false;
+        let discoveredPorts = {}; // Store info about discovered ports { portId: { ioTypeId, modes: [] } }
+
+        // Request queue system
+        let requestQueue = [];
+        let isProcessingQueue = false;
+
+        // DOM Elements
+        const connectButton = document.getElementById('connectButton');
+        const statusDiv = document.getElementById('status');
+        const port0RawDiv = document.getElementById('port0-raw');
+        const port0GestDiv = document.getElementById('port0-gest');
+        const port1TagDiv = document.getElementById('port1-tag');
+        const port1RgbDiv = document.getElementById('port1-rgb');
+        const port2PantDiv = document.getElementById('port2-pant');
+        const port3ChalDiv = document.getElementById('port3-chal');
+        const port3VersDiv = document.getElementById('port3-vers');
+        const port3EventsDiv = document.getElementById('port3-events');
+        const port3DebugDiv = document.getElementById('port3-debug');
+        const port6VltlDiv = document.getElementById('port6-vltl');
+        const port6VltsDiv = document.getElementById('port6-vlts');
+        const pantsNameSpan = document.getElementById('pants-name');
+        const pantsSetSpan = document.getElementById('pants-set');
+        const setLink = document.getElementById('set-link');
+        const rawDataLogDiv = document.getElementById('rawDataLog');
+        const pantsVisualization = document.getElementById('pants-visualization');
+
+        // Color mapping for barcode sensor
+        const COLOR_MAP = {
+            0x00: "None", 0x01: "Red", 0x02: "Blue", 0x03: "Yellow",
+            0x04: "Green", 0x05: "Light Blue", 0x06: "Black", 0x07: "White",
+            0x08: "Orange", 0x09: "Magenta", 0x0A: "Purple", 0x0B: "Dark Pink",
+            0x0C: "Beige", 0x0D: "Brown", 0x0E: "Pink", 0x0F: "Neon Green",
+            0x10: "Neon Orange", 0x11: "Neon Pink", 0x12: "Neon Yellow",
+            0x13: "Neon Purple", 0x14: "Neon Red", 0x15: "Neon Black",
+            0x16: "Neon White", 0x17: "Neon Brown", 0x18: "Neon Gray",
+            0x19: "Neon Silver", 0x1A: "Neon Gold", 0x1B: "Neon Copper",
+            0x1C: "Neon Bronze", 0x1D: "Neon Chrome", 0x1E: "Neon Titanium",
+            0x1F: "Neon Platinum", 0x20: "Neon Palladium", 0x21: "Neon Rhodium",
+            0x22: "Neon Ruthenium", 0x23: "Neon Iridium", 0x24: "Neon Osmium",
+            0x25: "Neon Rhenium", 0x26: "Neon Technetium", 0x27: "Neon Promethium",
+            0x28: "Neon Samarium", 0x29: "Neon Europium", 0x2A: "Neon Gadolinium",
+            0x2B: "Neon Terbium", 0x2C: "Neon Dysprosium", 0x2D: "Neon Holmium",
+            0x2E: "Neon Erbium", 0x2F: "Neon Thulium", 0x30: "Neon Ytterbium",
+            0x31: "Neon Lutetium", 0x32: "Neon Hafnium", 0x33: "Neon Tantalum",
+            0x34: "Neon Tungsten", 0x35: "Neon Rhenium", 0x36: "Neon Osmium",
+            0x37: "Neon Iridium", 0x38: "Neon Platinum", 0x39: "Neon Gold",
+            0x3A: "Neon Mercury", 0x3B: "Neon Thallium", 0x3C: "Neon Lead",
+            0x3D: "Neon Bismuth", 0x3E: "Neon Polonium", 0x3F: "Neon Astatine",
+            0x40: "Neon Radon", 0x41: "Neon Francium", 0x42: "Neon Radium",
+            0x43: "Neon Actinium", 0x44: "Neon Thorium", 0x45: "Neon Protactinium",
+            0x46: "Neon Uranium", 0x47: "Neon Neptunium", 0x48: "Neon Plutonium",
+            0x49: "Neon Americium", 0x4A: "Neon Curium", 0x4B: "Neon Berkelium",
+            0x4C: "Neon Californium", 0x4D: "Neon Einsteinium", 0x4E: "Neon Fermium",
+            0x4F: "Neon Mendelevium", 0x50: "Neon Nobelium", 0x51: "Neon Lawrencium",
+            0x52: "Neon Rutherfordium", 0x53: "Neon Dubnium", 0x54: "Neon Seaborgium",
+            0x55: "Neon Bohrium", 0x56: "Neon Hassium", 0x57: "Neon Meitnerium",
+            0x58: "Neon Darmstadtium", 0x59: "Neon Roentgenium", 0x5A: "Neon Copernicium",
+            0x5B: "Neon Nihonium", 0x5C: "Neon Flerovium", 0x5D: "Neon Moscovium",
+            0x5E: "Neon Livermorium", 0x5F: "Neon Tennessine", 0x60: "Neon Oganesson",
+            0x61: "Neon Unknown", 0x62: "Neon Unknown", 0x63: "Neon Unknown",
+            0x64: "Neon Unknown", 0x65: "Neon Unknown", 0x66: "Neon Unknown",
+            0x67: "Neon Unknown", 0x68: "Neon Unknown", 0x69: "Neon Unknown",
+            0x6A: "Neon Unknown", 0x6B: "Neon Unknown", 0x6C: "Neon Unknown",
+            0x6D: "Neon Unknown", 0x6E: "Neon Unknown", 0x6F: "Neon Unknown",
+            0x70: "Neon Unknown", 0x71: "Neon Unknown", 0x72: "Neon Unknown",
+            0x73: "Neon Unknown", 0x74: "Neon Unknown", 0x75: "Neon Unknown",
+            0x76: "Neon Unknown", 0x77: "Neon Unknown", 0x78: "Neon Unknown",
+            0x79: "Neon Unknown", 0x7A: "Neon Unknown", 0x7B: "Neon Unknown",
+            0x7C: "Neon Unknown", 0x7D: "Neon Unknown", 0x7E: "Neon Unknown",
+            0x7F: "Neon Unknown", 0x80: "Neon Unknown", 0x81: "Neon Unknown",
+            0x82: "Neon Unknown", 0x83: "Neon Unknown", 0x84: "Neon Unknown",
+            0x85: "Neon Unknown", 0x86: "Neon Unknown", 0x87: "Neon Unknown",
+            0x88: "Neon Unknown", 0x89: "Neon Unknown", 0x8A: "Neon Unknown",
+            0x8B: "Neon Unknown", 0x8C: "Neon Unknown", 0x8D: "Neon Unknown",
+            0x8E: "Neon Unknown", 0x8F: "Neon Unknown", 0x90: "Neon Unknown",
+            0x91: "Neon Unknown", 0x92: "Neon Unknown", 0x93: "Neon Unknown",
+            0x94: "Neon Unknown", 0x95: "Neon Unknown", 0x96: "Neon Unknown",
+            0x97: "Neon Unknown", 0x98: "Neon Unknown", 0x99: "Neon Unknown",
+            0x9A: "Neon Unknown", 0x9B: "Neon Unknown", 0x9C: "Neon Unknown",
+            0x9D: "Neon Unknown", 0x9E: "Neon Unknown", 0x9F: "Neon Unknown",
+            0xA0: "Neon Unknown", 0xA1: "Neon Unknown", 0xA2: "Neon Unknown",
+            0xA3: "Neon Unknown", 0xA4: "Neon Unknown", 0xA5: "Neon Unknown",
+            0xA6: "Neon Unknown", 0xA7: "Neon Unknown", 0xA8: "Neon Unknown",
+            0xA9: "Neon Unknown", 0xAA: "Neon Unknown", 0xAB: "Neon Unknown",
+            0xAC: "Neon Unknown", 0xAD: "Neon Unknown", 0xAE: "Neon Unknown",
+            0xAF: "Neon Unknown", 0xB0: "Neon Unknown", 0xB1: "Neon Unknown",
+            0xB2: "Neon Unknown", 0xB3: "Neon Unknown", 0xB4: "Neon Unknown",
+            0xB5: "Neon Unknown", 0xB6: "Neon Unknown", 0xB7: "Neon Unknown",
+            0xB8: "Neon Unknown", 0xB9: "Neon Unknown", 0xBA: "Neon Unknown",
+            0xBB: "Neon Unknown", 0xBC: "Neon Unknown", 0xBD: "Neon Unknown",
+            0xBE: "Neon Unknown", 0xBF: "Neon Unknown", 0xC0: "Neon Unknown",
+            0xC1: "Neon Unknown", 0xC2: "Neon Unknown", 0xC3: "Neon Unknown",
+            0xC4: "Neon Unknown", 0xC5: "Neon Unknown", 0xC6: "Neon Unknown",
+            0xC7: "Neon Unknown", 0xC8: "Neon Unknown", 0xC9: "Neon Unknown",
+            0xCA: "Neon Unknown", 0xCB: "Neon Unknown", 0xCC: "Neon Unknown",
+            0xCD: "Neon Unknown", 0xCE: "Neon Unknown", 0xCF: "Neon Unknown",
+            0xD0: "Neon Unknown", 0xD1: "Neon Unknown", 0xD2: "Neon Unknown"
+        };
+
+        // Gesture mapping for Port 0 Mode 1
+        const GESTURE_MAP = {
+            0: "No gesture",
+            1: "Shake",
+            2: "Tilt Left",
+            3: "Tilt Right",
+            4: "Tilt Forward",
+            5: "Tilt Backward",
+            6: "Freefall",
+            7: "Tap",
+            8: "Double Tap",
+            9: "Jump"
+        };
+
+        // Comprehensive pants code mapping with LEGO set information
+        const PANTS_CODES = {
+            0x00: {binary: "000000", decimal: 0, name: "None", set: "N/A", set_url: ""},
+            0x03: {binary: "000011", decimal: 3, name: "Bee", set: "71393", set_url: "https://www.lego.com/en-us/product/bee-mario-power-up-pack-71393"},
+            0x05: {binary: "000101", decimal: 5, name: "Luigi", set: "71387", set_url: "https://www.lego.com/en-us/product/adventures-with-luigi-starter-course-71387"},
+            0x06: {binary: "000110", decimal: 6, name: "Frog", set: "71392", set_url: "https://www.lego.com/en-us/product/frog-mario-power-up-pack-71392"},
+            0x0A: {binary: "001010", decimal: 10, name: "Tanooki", set: "71385", set_url: "https://www.lego.com/en-us/product/tanooki-mario-power-up-pack-71385"},
+            0x0C: {binary: "001100", decimal: 12, name: "Propeller", set: "71371", set_url: "https://www.lego.com/en-us/product/propeller-mario-power-up-pack-71371"},
+            0x11: {binary: "010001", decimal: 17, name: "Cat", set: "71372", set_url: "https://www.lego.com/en-us/product/cat-mario-power-up-pack-71372"},
+            0x12: {binary: "010010", decimal: 18, name: "Fire", set: "71370", set_url: "https://www.lego.com/en-us/product/fire-mario-power-up-pack-71370"},
+            0x14: {binary: "010100", decimal: 20, name: "Penguin", set: "71384", set_url: "https://www.lego.com/en-us/product/penguin-mario-power-up-pack-71384"},
+            0x18: {binary: "011000", decimal: 24, name: "Peach", set: "71403", set_url: "https://www.lego.com/en-us/product/adventures-with-peach-starter-course-71403"},
+            0x21: {binary: "100001", decimal: 33, name: "Mario", set: "71360", set_url: "https://www.lego.com/en-us/product/adventures-with-mario-starter-course-71360"},
+            0x22: {binary: "100010", decimal: 34, name: "Builder", set: "71373", set_url: "https://www.lego.com/en-us/product/builder-mario-power-up-pack-71373"},
+            0x23: {binary: "100011", decimal: 35, name: "Ice", set: "71415", set_url: "https://www.lego.com/en-us/product/ice-mario-suit-and-frozen-world-expansion-set-71415"}
+        };
+
+        // --- Helper Functions ---
+        function setStatus(message, isConnectedStatus) {
+            statusDiv.textContent = message;
+            if (isConnectedStatus) {
+                statusDiv.className = "status-bar status-connected";
+            } else {
+                statusDiv.className = "status-bar status-disconnected";
+            }
+        }
+
+        function arrayBufferToHex(buffer) {
+            return [...new Uint8Array(buffer)]
+                .map(x => x.toString(16).padStart(2, '0'))
+                .join(' ');
+        }
+
+        function appendToRawLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            rawDataLogDiv.appendChild(logEntry);
+            rawDataLogDiv.scrollTop = rawDataLogDiv.scrollHeight;
+        }
+
+        // --- Request Queue System ---
+        function enqueueRequest(requestFn, portId, mode = null) {
+            requestQueue.push({ requestFn, portId, mode });
+            if (!isProcessingQueue) {
+                processRequestQueue();
+            }
+        }
+
+        async function processRequestQueue() {
+            if (isProcessingQueue || requestQueue.length === 0 || !isConnected || !characteristic) return;
+
+            isProcessingQueue = true;
+
+            while (requestQueue.length > 0 && isConnected && characteristic) {
+                const { requestFn, portId, mode } = requestQueue.shift();
+
+                try {
+                    await requestFn(portId, mode);
+                    // Add delay between requests
+                    await new Promise(resolve => setTimeout(resolve, REQUEST_PROCESSING_DELAY));
+                } catch (e) {
+                    console.error("[QUEUE] Error processing request:", e);
+                    appendToRawLog(`QUEUE ERROR: ${e.message}`);
+                }
+            }
+
+            isProcessingQueue = false;
+        }
+
+        // --- Core BLE Functions ---
+        async function connect() {
+            if (isConnected) {
+                setStatus("Already connected.", false);
+                return;
+            }
+
+            // Reset discovered ports and request queue
+            discoveredPorts = {};
+            requestQueue = [];
+            isProcessingQueue = false;
+
+            try {
+                setStatus("Requesting Bluetooth Device...", false);
+                appendToRawLog("Requesting Bluetooth Device...");
+
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [LEGO_SERVICE_UUID] }],
+                    optionalServices: [LEGO_SERVICE_UUID]
+                });
+
+                setStatus(`Connecting to ${device.name || 'LEGO Character'}...`, false);
+                appendToRawLog(`Connecting to ${device.name || 'LEGO Character'}...`);
+
+                server = await device.gatt.connect();
+
+                setStatus("Getting Service...", false);
+                appendToRawLog("Getting Service...");
+                service = await server.getPrimaryService(LEGO_SERVICE_UUID);
+
+                setStatus("Getting Characteristic...", false);
+                appendToRawLog("Getting Characteristic...");
+                characteristic = await service.getCharacteristic(LEGO_CHARACTERISTIC_UUID);
+
+                setStatus("Setting up notifications...", false);
+                appendToRawLog("Setting up notifications...");
+                await characteristic.startNotifications();
+                characteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+
+                isConnected = true;
+                connectButton.textContent = "Disconnect";
+                setStatus(`Connected to ${device.name || 'LEGO Character'}!`, true);
+                appendToRawLog(`Connected to ${device.name || 'LEGO Character'}!`);
+
+                // Request basic hub info
+                enqueueRequest(requestHubProperty, 0x01); // Name
+                enqueueRequest(requestHubProperty, 0x03); // FW Version
+
+                setStatus("Waiting for device information and data...", true);
+                appendToRawLog("Waiting for device information and data...");
+
+            } catch (error) {
+                setStatus(`Error: ${error.message}`, false);
+                console.error("[GUI] Connection Error:", error);
+                appendToRawLog(`ERROR: ${error.message}`);
+                disconnect();
+            }
+        }
+
+        async function disconnect() {
+            setStatus("Disconnecting...", false);
+            appendToRawLog("Disconnecting...");
+
+            // Clear the request queue
+            requestQueue = [];
+            isProcessingQueue = false;
+
+            if (characteristic && characteristic.value) {
+                try {
+                    await characteristic.stopNotifications();
+                    characteristic.removeEventListener('characteristicvaluechanged', handleNotifications);
+                    console.log("[GUI] Notifications stopped.");
+                    appendToRawLog("Notifications stopped.");
+                } catch (e) {
+                    console.warn("[GUI] Error stopping notifications:", e);
+                    appendToRawLog(`WARN: Error stopping notifications: ${e.message}`);
+                }
+            }
+            if (server && server.connected) {
+                try {
+                    await server.disconnect();
+                    console.log("[GUI] Server disconnected.");
+                    appendToRawLog("Server disconnected.");
+                } catch (e) {
+                    console.warn("[GUI] Error disconnecting server:", e);
+                    appendToRawLog(`WARN: Error disconnecting server: ${e.message}`);
+                }
+            }
+            isConnected = false;
+            device = null;
+            server = null;
+            service = null;
+            characteristic = null;
+            discoveredPorts = {};
+            connectButton.textContent = "Connect to LEGO Mario";
+            setStatus("Disconnected.", false);
+            appendToRawLog("Disconnected.");
+        }
+
+        async function requestHubProperty(propertyId) {
+            const data = new Uint8Array([0x05, 0x00, 0x01, propertyId, 0x05]); // Len, Hub ID, Msg Type, Prop ID, Op (Request Update)
+            console.log(`[GUI] Requesting Hub Property ${propertyId}:`, arrayBufferToHex(data.buffer));
+            appendToRawLog(`-> Request Hub Property ${propertyId}`);
+            if (characteristic) {
+                try {
+                    await characteristic.writeValueWithResponse(data);
+                    console.log(`[GUI] Hub Property ${propertyId} request sent.`);
+                } catch (e) {
+                    console.error("[GUI] Failed to request Hub Property:", e);
+                    appendToRawLog(`ERROR: Failed to request Hub Property ${propertyId}: ${e.message}`);
+                }
+            }
+        }
+
+        async function requestPortInformation(portId, infoType) {
+            const data = new Uint8Array([0x05, 0x00, 0x21, portId, infoType]); // Len, Hub ID, Msg Type 0x21, Port ID, Info Type
+            console.log(`[GUI] Requesting Port Info (Type ${infoType}) for Port ${portId}:`, arrayBufferToHex(data.buffer));
+            appendToRawLog(`-> Request Port Info P${portId} T${infoType}`);
+            if (characteristic) {
+                try {
+                    await characteristic.writeValueWithResponse(data);
+                    console.log(`[GUI] Port Info request sent for Port ${portId}, Type ${infoType}.`);
+                } catch (e) {
+                    console.error(`[GUI] Failed to request Port Info for Port ${portId}, Type ${infoType}:`, e);
+                    appendToRawLog(`ERROR: Failed to request Port Info P${portId} T${infoType}: ${e.message}`);
+                }
+            }
+        }
+
+        async function requestPortModeInformation(portId, mode) {
+            const dataValueFormat = new Uint8Array([0x06, 0x00, 0x22, portId, mode, 0x80]); // Request Value Format
+            const dataName = new Uint8Array([0x06, 0x00, 0x22, portId, mode, 0x00]); // Request Name
+
+            console.log(`[GUI] Requesting Port Mode Info (VF) for Port ${portId}, Mode ${mode}:`, arrayBufferToHex(dataValueFormat.buffer));
+            appendToRawLog(`-> Request Mode Info P${portId} M${mode} (VF)`);
+
+            if (characteristic) {
+                try {
+                    // Send Value Format request
+                    await characteristic.writeValueWithResponse(dataValueFormat);
+                    console.log(`[GUI] Port Mode Info (VF) request sent for Port ${portId}, Mode ${mode}.`);
+
+                    // Send Name request
+                    console.log(`[GUI] Requesting Port Mode Info (Name) for Port ${portId}, Mode ${mode}:`, arrayBufferToHex(dataName.buffer));
+                    appendToRawLog(`-> Request Mode Info P${portId} M${mode} (Name)`);
+                    await characteristic.writeValueWithResponse(dataName);
+                    console.log(`[GUI] Port Mode Info (Name) request sent for Port ${portId}, Mode ${mode}.`);
+
+                } catch (e) {
+                    console.error(`[GUI] Failed to request Port Mode Info for Port ${portId}, Mode ${mode}:`, e);
+                    appendToRawLog(`ERROR: Failed to request Mode Info P${portId} M${mode}: ${e.message}`);
+                }
+            }
+        }
+
+        async function sendPortInputFormatSetup(portId, mode, enableNotifications = true, deltaInterval = 5) {
+            const data = new Uint8Array(10); // 10 bytes total
+            data[0] = 0x0A; // Length (10 bytes total)
+            data[1] = 0x00; // Hub ID (standalone)
+            data[2] = 0x41; // Message Type
+            data[3] = portId;
+            data[4] = mode;
+            data[5] = enableNotifications ? 0x01 : 0x00;
+            const dv = new DataView(data.buffer);
+            dv.setUint32(6, deltaInterval, true); // Offset 6, Little-endian
+
+            console.log("[GUI] Sending Port Input Format Setup:", arrayBufferToHex(data.buffer));
+            appendToRawLog(`-> Setup Input Format P${portId} M${mode} (N:${enableNotifications ? 1 : 0} D:${deltaInterval})`);
+            if (characteristic) {
+                try {
+                    await characteristic.writeValueWithResponse(data);
+                    console.log("[GUI] Port Input Format Setup command sent successfully.");
+                } catch (e) {
+                    console.error("[GUI] Failed to send Port Input Format Setup:", e);
+                    appendToRawLog(`ERROR: Failed to send Setup P${portId} M${mode}: ${e.message}`);
+                    setStatus(`Error sending setup command: ${e.message}`, true);
+                }
+            } else {
+                console.warn("[GUI] Cannot send command, characteristic not available.");
+                appendToRawLog("WARN: Cannot send command, characteristic not available.");
+            }
+        }
+
+        function handleNotifications(event) {
+            const value = event.target.value;
+            const rawDataHex = arrayBufferToHex(value.buffer);
+            const data = new Uint8Array(value.buffer);
+
+            if (data.length < 3) {
+                appendToRawLog(`<-- Malformed Message (Too Short): ${rawDataHex}`);
+                return;
+            }
+
+            const messageType = data[2];
+            appendToRawLog(`<-- Message Type 0x${messageType.toString(16).padStart(2, '0')}: ${rawDataHex}`);
+
+            if (messageType === 0x01) { // Hub Properties Update
+                if (data.length >= 5) {
+                    const property = data[3];
+                    const operation = data[4];
+                    const payload = data.slice(5);
+                    if (operation === 0x06) { // Operation: Update (Upstream)
+                        if (property === 0x01) { // Name
+                            const decoder = new TextDecoder('utf-8');
+                            const name = decoder.decode(payload);
+                            console.log("[GUI] Hub Name:", name);
+                            appendToRawLog(`   Hub Name: '${name}'`);
+                        } else if (property === 0x03) { // FW Version
+                            if (payload.length >= 4) {
+                                const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                                const versionEncoded = dv.getUint32(0, true);
+                                const major = (versionEncoded >> 28) & 0x7;
+                                const minor = (versionEncoded >> 24) & 0xF;
+                                const bugfix = (versionEncoded >> 16) & 0xFF;
+                                const build = versionEncoded & 0xFFFF;
+                                console.log("[GUI] Hub FW Version:", `${major}.${minor}.${bugfix}.${build}`);
+                                appendToRawLog(`   Hub FW Version: ${major}.${minor}.${bugfix}.${build}`);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (messageType === 0x04) { // Hub Attached I/O
+                if (data.length >= 6) {
+                    const portId = data[3];
+                    const eventCode = data[4];
+                    if (eventCode === 0x01) { // Attached I/O
+                        if (data.length >= 8) {
+                            const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+                            const ioTypeId = dv.getUint16(5, true);
+                            console.log(`[GUI] Port ${portId} Attached I/O Type: 0x${ioTypeId.toString(16).padStart(4, '0')}`);
+                            appendToRawLog(`   Port ${portId} Attached I/O Type: 0x${ioTypeId.toString(16).padStart(4, '0')}`);
+
+                            if (!discoveredPorts[portId]) {
+                                discoveredPorts[portId] = { ioTypeId: ioTypeId, modes: [] };
+                                // Add to request queue
+                                enqueueRequest(requestPortInformation, portId, 0x01); // Mode Info
+                            }
+                        }
+                    } else if (eventCode === 0x00) { // Detached I/O
+                        console.log(`[GUI] Port ${portId} Detached I/O`);
+                        appendToRawLog(`   Port ${portId} Detached I/O`);
+                        delete discoveredPorts[portId];
+                    }
+                }
+            }
+            else if (messageType === 0x43) { // Port Information
+                if (data.length >= 8) {
+                    const portId = data[3];
+                    const infoType = data[4];
+                    if (infoType === 0x01 && data.length >= 11) { // Mode Info
+                        const capabilities = data[5];
+                        const totalModeCount = data[6];
+                        const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+                        const inputModesBitmask = dv.getUint16(7, true); // Little-endian
+                        const outputModesBitmask = dv.getUint16(9, true); // Little-endian
+                        console.log(`[GUI] Port ${portId} Mode Info: Total Modes=${totalModeCount}, Input=0x${inputModesBitmask.toString(16)}, Output=0x${outputModesBitmask.toString(16)}`);
+                        appendToRawLog(`   Port ${portId} Mode Info: Total=${totalModeCount}, Input=0x${inputModesBitmask.toString(16)}, Output=0x${outputModesBitmask.toString(16)}`);
+
+                        if (discoveredPorts[portId]) {
+                            for (let mode = 0; mode < totalModeCount; mode++) {
+                                if ((inputModesBitmask >> mode) & 1) {
+                                    console.log(`[GUI] Port ${portId} has Input Mode ${mode}`);
+                                    appendToRawLog(`   Port ${portId} has Input Mode ${mode}`);
+                                    discoveredPorts[portId].modes.push(mode);
+                                    // Add to request queue
+                                    enqueueRequest(requestPortModeInformation, portId, mode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (messageType === 0x44) { // Port Mode Information
+                if (data.length >= 6) {
+                    const portId = data[3];
+                    const mode = data[4];
+                    const infoType = data[5];
+                    const payload = data.slice(6);
+                    if (infoType === 0x00) { // Name
+                        const decoder = new TextDecoder('utf-8');
+                        const modeName = decoder.decode(payload);
+                        console.log(`[GUI] Port ${portId} Mode ${mode} Name: '${modeName}'`);
+                        appendToRawLog(`   Port ${portId} Mode ${mode} Name: '${modeName}'`);
+                    } else if (infoType === 0x80) { // Value Format
+                        if (payload.length >= 4) {
+                            const numDatasets = payload[0];
+                            const datasetType = payload[1];
+                            const totalFigures = payload[2];
+                            const decimals = payload[3];
+                            let typeStr = "Unknown";
+                            if (datasetType === 0x00) typeStr = "8 bit";
+                            else if (datasetType === 0x01) typeStr = "16 bit";
+                            else if (datasetType === 0x10) typeStr = "32 bit";
+                            else if (datasetType === 0x11) typeStr = "FLOAT";
+                            console.log(`[GUI] Port ${portId} Mode ${mode} Value Format: ${numDatasets} x ${typeStr}, Figures: ${totalFigures}, Decimals: ${decimals}`);
+                            appendToRawLog(`   Port ${portId} Mode ${mode} Value Format: ${numDatasets} x ${typeStr}, Figs: ${totalFigures}, Decs: ${decimals}`);
+
+                            // Add to request queue for setup
+                            enqueueRequest(sendPortInputFormatSetup, portId, mode);
+                        }
+                    }
+                }
+            }
+            else if (messageType === 0x47) { // Port Input Format (Single) - Acknowledgment
+                if (data.length >= 8) {
+                    const ackPortId = data[3];
+                    const ackMode = data[4];
+                    const ackNotifications = data[5];
+                    console.log(`[GUI] Ack: Port Input Format for Port ${ackPortId}, Mode ${ackMode} - Notifications: ${ackNotifications ? 'ON' : 'OFF'}`);
+                    appendToRawLog(`   Ack: Input Format P${ackPortId} M${ackMode} Notifications: ${ackNotifications ? 'ON' : 'OFF'}`);
+                }
+            }
+            else if (messageType === 0x45) { // Port Value (Single)
+                if (data.length >= 5) {
+                    const portId = data[3];
+                    const mode = data[4];
+                    const payload = data.slice(5);
+                    const payloadHex = arrayBufferToHex(payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength));
+
+                    // --- Display raw data for ALL ports/modes ---
+                    appendToRawLog(`   Data P${portId} M${mode}: ${payloadHex}`);
+
+                    // --- Specific handling ---
+                    if (portId === 0 && mode === 0) {
+                        if (payload.length >= 3) {
+                            port0RawDiv.textContent = `X: ${payload[0]}, Y: ${payload[1]}, Z: ${payload[2]}`;
+                        }
+                    } else if (portId === 0 && mode === 1) {
+                        if (payload.length >= 2) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const gestureValue = dv.getUint16(0, true);
+                            port0GestDiv.textContent = `Gesture: ${gestureValue} (${GESTURE_MAP[gestureValue] || 'Unknown'})`;
+                        }
+                    } else if (portId === 1 && mode === 0) {
+                        if (payload.length >= 2) {
+                            // Check if it's a barcode format or color format
+                            if (payload[2] === 0xFF && payload[3] === 0xFF) {
+                                // Barcode format
+                                const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                                const tagValue = dv.getUint16(0, true);
+                                port1TagDiv.textContent = `Barcode ID: ${tagValue}`;
+                            } else if (payload[0] === 0xFF && payload[1] === 0xFF) {
+                                // Color format
+                                const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                                const colorValue = dv.getUint16(2, true);
+                                const colorName = COLOR_MAP[colorValue] || `Color ID: ${colorValue}`;
+                                port1RgbDiv.textContent = `Color: ${colorName} (ID: ${colorValue})`;
+                            }
+                        }
+                    } else if (portId === 1 && mode === 1) {
+                        if (payload.length >= 3) {
+                            port1RgbDiv.textContent = `R: ${payload[0]}, G: ${payload[1]}, B: ${payload[2]}`;
+                        }
+                    } else if (portId === 2 && mode === 0) {
+                        if (payload.length >= 1) {
+                            // Mask to get only 6 bits (0-63)
+                            const pantValue = payload[0] & 0x3F;
+                            const binaryString = (pantValue & 0x3F).toString(2).padStart(6, '0');
+                            const decimalValue = pantValue & 0x3F;
+
+                            // Update visualization
+                            updatePantsVisualization(binaryString);
+
+                            // Update main display
+                            port2PantDiv.textContent = `Code: ${binaryString} (${decimalValue})`;
+
+                            // Update details
+                            const pantsInfo = PANTS_CODES[pantValue];
+                            if (pantsInfo) {
+                                pantsNameSpan.textContent = pantsInfo.name;
+                                pantsSetSpan.textContent = pantsInfo.set;
+
+                                if (pantsInfo.set_url) {
+                                    setLink.href = pantsInfo.set_url;
+                                    setLink.style.display = 'block';
+                                } else {
+                                    setLink.style.display = 'none';
+                                }
+                            } else {
+                                pantsNameSpan.textContent = "UNKNOWN";
+                                pantsSetSpan.textContent = "?";
+                                setLink.style.display = 'none';
+                            }
+                        }
+                    } else if (portId === 3 && mode === 0) {
+                        if (payload.length >= 2) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const challengeValue = dv.getUint16(0, true);
+                            port3ChalDiv.textContent = `Challenge: ${challengeValue}`;
+                        }
+                    } else if (portId === 3 && mode === 1) {
+                        if (payload.length >= 4) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const versionValue = dv.getUint32(0, true);
+                            port3VersDiv.textContent = `Version: ${versionValue}`;
+                        }
+                    } else if (portId === 3 && mode === 2) {
+                        if (payload.length >= 2) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const eventsValue = dv.getUint16(0, true);
+                            port3EventsDiv.textContent = `Events: ${eventsValue}`;
+                        }
+                    } else if (portId === 3 && mode === 3) {
+                        if (payload.length >= 4) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const debugValue = dv.getUint32(0, true);
+                            port3DebugDiv.textContent = `Debug: ${debugValue}`;
+                        }
+                    } else if (portId === 6 && mode === 0) {
+                        if (payload.length >= 2) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const voltage = dv.getUint16(0, true);
+                            port6VltlDiv.textContent = `Voltage (Long): ${voltage}mV`;
+                        }
+                    } else if (portId === 6 && mode === 1) {
+                        if (payload.length >= 2) {
+                            const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+                            const voltage = dv.getUint16(0, true);
+                            port6VltsDiv.textContent = `Voltage (Short): ${voltage}mV`;
+                        }
+                    }
+                }
+            }
+        }
+
+        function updatePantsVisualization(binaryCode) {
+            // Ensure binary code is 6 bits
+            const binaryStr = binaryCode.toString().padStart(6, '0');
+
+            // Update each bit circle
+            const bits = document.querySelectorAll('.bit-circle');
+            for (let i = 0; i < 6; i++) {
+                const bit = binaryStr[5 - i]; // Reverse order (bit 5 to bit 0)
+                const bitElement = bits[i];
+
+                if (bit === '1') {
+                    bitElement.className = 'bit-circle bit-1';
+                    bitElement.textContent = '1';
+                } else {
+                    bitElement.className = 'bit-circle bit-0';
+                    bitElement.textContent = '0';
+                }
+            }
+        }
+
+        // --- Event Listeners ---
+        connectButton.addEventListener('click', async () => {
+            if (isConnected) {
+                await disconnect();
+            } else {
+                await connect();
+            }
+        });
+
+        setLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open(setLink.href, '_blank');
+        });
+
+        // Initialize with log message
+        appendToRawLog("--- Log Started ---");
+    </script>
 </body>
 </html>
