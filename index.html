@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Lego Mario</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1em;
+        }
+        #log {
+            grid-column: 1 / -1;
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button id="connectButton">Connect to Lego Mario</button>
+        <button id="disconnectButton" disabled>Disconnect</button>
+        <button id="turnOffButton" disabled>Turn Off</button>
+    </div>
+    <div>
+        <h2>Device Info</h2>
+        <p><strong>Status:</strong> <span id="status">Disconnected</span></p>
+    </div>
+    <div>
+        <h2>Pants</h2>
+        <p id="pants">None</p>
+    </div>
+    <div>
+        <h2>Tile</h2>
+        <p id="tile">None</p>
+    </div>
+    <div>
+        <h2>Accelerometer</h2>
+        <p>X: <span id="accX">0</span>, Y: <span id="accY">0</span>, Z: <span id="accZ">0</span></p>
+    </div>
+    <div id="log"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
