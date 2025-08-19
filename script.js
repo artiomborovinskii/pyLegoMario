@@ -169,11 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.getUint8(2) === 0x45) {
             const port = data.getUint8(3);
             if (port === 0x01) { // Camera Sensor Data
-                if (data.getUint8(4) === 0xff && data.getUint8(5) === 0xff) {
-                    const color = HEX_TO_COLOR_TILE[data.getUint8(6)] || `Unknown Color: 0x${data.getUint8(6).toString(16)}`;
+                const byte4 = data.getUint8(4);
+                const byte5 = data.getUint8(5);
+                const byte6 = data.getUint8(6);
+                const byte7 = data.getUint8(7);
+
+                if (byte4 === 0xff && byte5 === 0xff && byte6 === 0xff && byte7 === 0xff) {
+                    log("Camera idle");
+                    tileDisplay.textContent = "Idle";
+                } else if (byte6 === 0xff && byte7 === 0xff) { // Barcode
+                    const barcode = byte4 | (byte5 << 8);
+                    log(`Barcode: 0x${barcode.toString(16)}`);
+                    tileDisplay.textContent = `Barcode: 0x${barcode.toString(16)}`;
+                } else if (byte4 === 0xff && byte5 === 0xff) { // Color
+                    const color = HEX_TO_COLOR_TILE[byte6] || `Unknown Color: 0x${byte6.toString(16)}`;
                     log(`Ground: ${color}`);
                     tileDisplay.textContent = color;
-                } else {
+                } else { // RGB Tile
                     const tileCode = data.getUint32(4, true);
                     const tileName = HEX_TO_RGB_TILE[tileCode] || `Unknown Tile Code: 0x${tileCode.toString(16)}`;
                     log(`Tile: ${tileName}`);
