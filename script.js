@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accXDisplay = document.getElementById('accX');
     const accYDisplay = document.getElementById('accY');
     const accZDisplay = document.getElementById('accZ');
+    const voltageDisplay = document.getElementById('voltage');
     const logDisplay = document.getElementById('log');
 
     let legoMario;
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUBSCRIBE_IMU_COMMAND = new Uint8Array([0x0A, 0x00, 0x41, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01]);
     const SUBSCRIBE_RGB_COMMAND = new Uint8Array([0x0A, 0x00, 0x41, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01]);
     const SUBSCRIBE_PANTS_COMMAND = new Uint8Array([0x0A, 0x00, 0x41, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01]);
+    const SUBSCRIBE_VOLTAGE_COMMAND = new Uint8Array([0x0A, 0x00, 0x41, 0x06, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01]);
     const TURN_OFF_COMMAND = new Uint8Array([0x04, 0x00, 0x02, 0x01]);
     const DISCONNECT_COMMAND = new Uint8Array([0x04, 0x00, 0x02, 0x02]);
 
@@ -110,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 () => characteristic.writeValueWithResponse(SUBSCRIBE_IMU_COMMAND),
                 () => characteristic.writeValueWithResponse(SUBSCRIBE_RGB_COMMAND),
                 () => characteristic.writeValueWithResponse(SUBSCRIBE_PANTS_COMMAND),
+                () => characteristic.writeValueWithResponse(SUBSCRIBE_VOLTAGE_COMMAND),
             ];
 
             for (const request of requestQueue) {
@@ -202,6 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pants = HEX_TO_PANTS[data.getUint8(4)] || 'Unknown';
                 log(`Pants: ${pants}`);
                 pantsDisplay.textContent = pants;
+            } else if (port === 0x06) { // Voltage data
+                const voltage = data.getUint8(4);
+                log(`Voltage: ${voltage}%`);
+                voltageDisplay.textContent = voltage;
             }
         } else {
             log(`Unknown message: ${hexData}`);
